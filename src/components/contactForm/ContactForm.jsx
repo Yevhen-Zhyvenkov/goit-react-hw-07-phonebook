@@ -1,32 +1,40 @@
+import { useDispatch, useSelector } from 'react-redux';
+import { getContacts } from 'redux/selectors';
+import { addContact } from 'redux/contactsSlice';
+import { nanoid } from '@reduxjs/toolkit';
+import { Notify } from "notiflix";
 import css from "./ContactForm.module.css"
-import { nanoid } from 'nanoid'
-import PropTypes from 'prop-types';
-import { useState } from "react";
 
-const ContactForm = ({ onSubmit }) => {
-    const [name, setName] = useState('');
-    const [number, setNumber] = useState('');
 
-const handleChange = (e) => {
-    const { name, value } = e.target;
-        switch (name) {
-    case 'name':
-        setName(value);
-        break;
-    case 'number':
-        setNumber(value);
-        break;
-    default:
-    return;
-    }
-  };
+export const ContactForm = () => {
+  const dispatch = useDispatch();
+  const contacts = useSelector(getContacts);
 
-const handleSubmit = (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit({ name, number });
-    setName('');
-    setNumber('');
+    const form = e.target;
+    const name = form.elements.name.value;
+    const number = form.elements.number.value;
+   
+    const lowerCaseName = name.toLowerCase();
+
+    const isContactExist = contacts.some(
+      contact =>
+        (contact.name.toLowerCase() === lowerCaseName &&
+          contact.number === number) ||
+        contact.number === number ||
+        contact.name.toLowerCase() === lowerCaseName
+    );
+
+    isContactExist
+      ? Notify.warning(
+          `Contact with that ${name} or ${number} is already present in the phone book.`
+        )
+      : dispatch(addContact(name, number));
+
+    form.reset();
   };
+
     
 const byInputNameId = nanoid();
 const byInputNumberId =  nanoid();
@@ -43,8 +51,8 @@ const byInputNumberId =  nanoid();
                         pattern="^[a-zA-Z\s]+$"
                         title="Name may contain only letters, apostrophe, dash and spaces. For example Adrian, Jacob Mercer, Charles de Batz de Castelmore d'Artagnan"
                         required
-                        value={name}
-                        onChange={handleChange}
+                        value={contacts.name}
+                      
                         id={byInputNameId}
                     />   
                     </label>
@@ -58,8 +66,8 @@ const byInputNumberId =  nanoid();
                         pattern="^-?(?:\d+(?:[.,]\d+)?(?:-|$))+$" 
                         title="Phone number must be digits and can contain spaces, dashes, parentheses and can start with +"
                         required
-                        value={number}
-                        onChange={handleChange}
+                        value={contacts.number}
+                        
                         id={byInputNumberId}
                         />
                     </label>
@@ -70,49 +78,75 @@ const byInputNumberId =  nanoid();
         )
     }
 
-ContactForm.propTypes = {
-    onSubmit: PropTypes.func.isRequired,
-}
+Notify.init({
+  width: '300px',
+  fontSize: '15px',
+  position: 'right-top',
+  closeButton: false,
+});
 
-export default ContactForm;
 
 
 
-//OLD
 
-// class ContactForm extends Component {
-// state = {
-//   contacts: [],
-//   name: '',
-//   number: ''
-// }
 
-// handleChange = (e) => {
-//     const { name, value} = e.currentTarget;
-//     this.setState({ [name]: value, })
-//     // console.log(e.currentTarget.value)
-// }
-// handleSubmit = (e) => {
-//     e.preventDefault();
-//     this.props.onSubmit(this.state);
-//         this.setState({
-//             name: '',
-//             number: '',
-//         });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// import css from "./ContactForm.module.css"
+// import { nanoid } from 'nanoid'
+// import PropTypes from 'prop-types';
+// import { useState } from "react";
+
+// const ContactForm = ({ onSubmit }) => {
+//     const [name, setName] = useState('');
+//     const [number, setNumber] = useState('');
+
+// const handleChange = (e) => {
+//     const { name, value } = e.target;
+//         switch (name) {
+//     case 'name':
+//         setName(value);
+//         break;
+//     case 'number':
+//         setNumber(value);
+//         break;
+//     default:
+//     return;
 //     }
+//   };
+
+// const handleSubmit = (e) => {
+//     e.preventDefault();
+//     onSubmit({ name, number });
+//     setName('');
+//     setNumber('');
+//   };
     
-// byInputNameId = nanoid();
-// byInputNumberId =  nanoid();
+// const byInputNameId = nanoid();
+// const byInputNumberId =  nanoid();
     
-// reset = () => {
-//     this.setState({ name: ' ', number: ' ' })
-//     };
-//     render() {
-//         const { name, number } = this.state;
 //         return (
 //             <div >
-//                 <form onSubmit={this.handleSubmit}>
-//                     <label htmlFor={this.inputNameId}>
+//                 <form onSubmit={handleSubmit}>
+//                     <label htmlFor={byInputNameId}>
 //                     Name
 //                     <input
 //                         className={css.input}
@@ -122,12 +156,12 @@ export default ContactForm;
 //                         title="Name may contain only letters, apostrophe, dash and spaces. For example Adrian, Jacob Mercer, Charles de Batz de Castelmore d'Artagnan"
 //                         required
 //                         value={name}
-//                         onChange={this.handleChange}
-//                         id={this.byInputNameId}
+//                         onChange={handleChange}
+//                         id={byInputNameId}
 //                     />   
 //                     </label>
                     
-//                     <label htmlFor={this.byInputNumberId}>
+//                     <label htmlFor={byInputNumberId}>
 //                     Number
 //                     <input
 //                         className={css.input}
@@ -137,8 +171,8 @@ export default ContactForm;
 //                         title="Phone number must be digits and can contain spaces, dashes, parentheses and can start with +"
 //                         required
 //                         value={number}
-//                         onChange={this.handleChange}
-//                         id={this.byInputNumberId}
+//                         onChange={handleChange}
+//                         id={byInputNumberId}
 //                         />
 //                     </label>
 
@@ -147,9 +181,11 @@ export default ContactForm;
 //             </div>
 //         )
 //     }
-// }
+
 // ContactForm.propTypes = {
 //     onSubmit: PropTypes.func.isRequired,
 // }
 
 // export default ContactForm;
+
+
